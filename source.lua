@@ -32,7 +32,8 @@ do
 		for i, v in pairs(properties or {}) do
 			object[i] = v
 
-			if typeof(v) == "Color3" then -- save for theme changer later
+			-- Only process theme colors except 'Shadow'
+			if typeof(v) == "Color3" and i ~= "Shadow" then -- save for theme changer later
 				local theme = utility:Find(themes, v)
 
 				if theme then
@@ -1972,6 +1973,7 @@ do
 		else
 			-- page button
 			button.Title.Font = Enum.Font.Gotham
+		
 			button.Title.TextTransparency = 0.65
 
 			if button:FindFirstChild("Icon") then
