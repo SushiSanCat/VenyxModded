@@ -21,8 +21,7 @@ local themes = {
 	DarkContrast = Color3.fromRGB(14, 14, 14),
 	TextColor = Color3.fromRGB(255, 255, 255),
 	GradientTop = Color3.fromRGB(40, 40, 40),
-	GradientBottom = Color3.fromRGB(20, 20, 20),
-	Shadow = Color3.fromRGB(0, 0, 0) -- fixed: ensure Shadow is a valid Color3
+	GradientBottom = Color3.fromRGB(20, 20, 20)
 }
 
 do
@@ -31,34 +30,21 @@ do
 
 		for i, v in pairs(properties or {}) do
 			object[i] = v
-
-			-- Only process theme colors except 'Shadow'
-			if typeof(v) == "Color3" and i ~= "Shadow" then -- save for theme changer later
+			if typeof(v) == "Color3" then -- save for theme changer later
 				local theme = utility:Find(themes, v)
-
 				if theme then
 					objects[theme] = objects[theme] or {}
 					objects[theme][i] = objects[theme][i] or setmetatable({}, {_mode = "k"})
-
 					table.insert(objects[theme][i], object)
 				end
 			end
 		end
 
-		-- Add rounded corners and drop shadow for design improvement
+		-- Add rounded corners for design improvement
 		if instance == "ImageLabel" or instance == "ImageButton" or instance == "Frame" then
 			local corner = Instance.new("UICorner")
 			corner.CornerRadius = UDim.new(0, 8)
 			corner.Parent = object
-			local shadow = Instance.new("ImageLabel")
-			shadow.Name = "Shadow"
-			shadow.BackgroundTransparency = 1
-			shadow.Image = "rbxassetid://1316045217"
-			shadow.ImageColor3 = themes.Shadow
-			shadow.Size = UDim2.new(1, 12, 1, 12)
-			shadow.Position = UDim2.new(0, -6, 0, -6)
-			shadow.ZIndex = (properties.ZIndex or 1) - 1
-			shadow.Parent = object
 		end
 
 		-- Add gradient for main backgrounds
@@ -209,6 +195,7 @@ do
 		-- stolen from wally or kiriot, kek
 		local dragging = false
 		local dragInput, mousePos, framePos
+		local lastTween
 
 		frame.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -233,7 +220,10 @@ do
 		input.InputChanged:Connect(function(input)
 			if input == dragInput and dragging then
 				local delta = input.Position - mousePos
-				parent.Position  = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+				local newPos = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+				if lastTween then lastTween:Cancel() end
+				lastTween = tween:Create(parent, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = newPos})
+				lastTween:Play()
 			end
 		end)
 
@@ -733,39 +723,29 @@ do
 		})
 
 		table.insert(self.modules, button)
-		--self:Resize()
-
 		local text = button.Title
 		local debounce
 
 		button.MouseButton1Click:Connect(function()
-			if debounce then
-				return
-			end
-
-			-- animation: scale up then down, fade in
-			utility:Tween(button, {Size = UDim2.new(1, 0, 0, 36)}, 0.15)
-			utility:Tween(button, {ImageTransparency = 0.7}, 0.15)
-			wait(0.15)
-			utility:Tween(button, {Size = UDim2.new(1, 0, 0, 30)}, 0.15)
-			utility:Tween(button, {ImageTransparency = 0}, 0.15)
-
+			if debounce then return end
 			debounce = true
+			-- Animation: scale up, color flash, then back
+			utility:Tween(button, {Size = UDim2.new(1, 0, 0, 36)}, 0.12)
+			utility:Tween(button, {ImageColor3 = themes.Accent}, 0.12)
+			wait(0.12)
+			utility:Tween(button, {Size = UDim2.new(1, 0, 0, 30)}, 0.12)
+			utility:Tween(button, {ImageColor3 = themes.DarkContrast}, 0.12)
 			text.TextSize = 0
-			utility:Tween(button.Title, {TextSize = 14}, 0.2)
-
-			wait(0.2)
-			utility:Tween(button.Title, {TextSize = 12}, 0.2)
-
+			utility:Tween(button.Title, {TextSize = 14}, 0.18)
+			wait(0.18)
+			utility:Tween(button.Title, {TextSize = 12}, 0.18)
 			if callback then
 				callback(function(...)
 					self:updateButton(button, ...)
 				end)
 			end
-
 			debounce = false
 		end)
-
 		return button
 	end
 
@@ -1987,6 +1967,8 @@ do
 			end
 
 			wait(0.1)
+
+
 
 			page.lastPosition = page.container.CanvasPosition.Y
 			page:Resize()
