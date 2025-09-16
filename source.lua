@@ -22,7 +22,7 @@ local themes = {
 	TextColor = Color3.fromRGB(255, 255, 255),
 	GradientTop = Color3.fromRGB(40, 40, 40),
 	GradientBottom = Color3.fromRGB(20, 20, 20),
-	Shadow = Color3.fromRGB(0, 0, 0)
+	Shadow = Color3.fromRGB(0, 0, 0) -- fixed: ensure Shadow is a valid Color3
 }
 
 do
